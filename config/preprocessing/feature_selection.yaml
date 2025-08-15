@@ -1,0 +1,11 @@
+name: "feature_selection"
+steps:
+  - imputer:
+      strategy: "median"
+  - variance_selector:
+      threshold: 0.01
+  - k_best_selector:
+      k: 1000
+      score_func: "f_regression"
+  - scaler:
+      method: "robust"

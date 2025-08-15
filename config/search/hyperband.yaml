@@ -1,0 +1,5 @@
+name: "hyperband" 
+algorithm: "hyperband"
+params:
+  max_t: 100
+  reduction_factor: 3

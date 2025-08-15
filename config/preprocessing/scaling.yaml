@@ -1,0 +1,5 @@
+# config/preprocessing/scaling.yaml
+name: "scaling_only"
+steps:
+  - scaling:
+      method: "minmax"

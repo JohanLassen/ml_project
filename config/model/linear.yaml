@@ -1,0 +1,9 @@
+name: "linear"
+class_path: "sklearn.linear_model.Ridge"
+params:
+  random_state: ${seed}
+search_space:
+  alpha:
+    type: "loguniform"
+    lower: 0.001
+    upper: 100.0

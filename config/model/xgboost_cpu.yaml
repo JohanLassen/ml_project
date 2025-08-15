@@ -1,0 +1,26 @@
+name: "xgboost_cpu"
+class_path: "xgboost.XGBRegressor"
+params:
+  random_state: ${seed}
+  n_jobs: -1  # Use all CPU cores
+  tree_method: "hist"  # CPU optimized
+search_space:
+  n_estimators: 
+    type: "choice"
+    values: [100, 200, 500]  # Fewer for CPU
+  max_depth:
+    type: "randint"
+    lower: 3
+    upper: 10
+  learning_rate:
+    type: "loguniform"
+    lower: 0.01
+    upper: 0.3
+  subsample:
+    type: "uniform"
+    lower: 0.6
+    upper: 1.0
+  colsample_bytree:
+    type: "uniform"
+    lower: 0.6
+    upper: 1.0

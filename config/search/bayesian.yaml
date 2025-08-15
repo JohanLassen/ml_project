@@ -1,0 +1,5 @@
+name: "bayesian"
+algorithm: "bohb"
+params:
+  max_t: 100
+  reduction_factor: 2

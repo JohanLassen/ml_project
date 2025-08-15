@@ -1,0 +1,36 @@
+name: "xgboost"
+class_path: "xgboost.XGBRegressor"
+params:
+  random_state: ${seed}
+  n_jobs: 1  # GPU doesn't need multiple CPU threads
+  tree_method: "gpu_hist"  # Enable GPU acceleration
+  gpu_id: 0  # Use first GPU
+  predictor: "gpu_predictor"  # GPU prediction
+search_space:
+  n_estimators: 
+    type: "choice"
+    values: [100, 200, 500, 1000, 2000]  # Can afford more with GPU
+  max_depth:
+    type: "randint"
+    lower: 3
+    upper: 12  # Deeper trees with GPU
+  learning_rate:
+    type: "loguniform"
+    lower: 0.01
+    upper: 0.3
+  subsample:
+    type: "uniform"
+    lower: 0.6
+    upper: 1.0
+  colsample_bytree:
+    type: "uniform"
+    lower: 0.6
+    upper: 1.0
+  reg_alpha:  # L1 regularization
+    type: "loguniform"
+    lower: 0.001
+    upper: 10.0
+  reg_lambda:  # L2 regularization
+    type: "loguniform"
+    lower: 0.001
+    upper: 10.0

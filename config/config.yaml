@@ -1,0 +1,23 @@
+defaults:
+  - preprocessing: basic
+  - model: xgboost
+  - search: bayesian
+
+data:
+  path: "data/raw/dataset.csv"
+  target_col: "outcome"
+  feature_prefix: "M"
+
+ray:
+  num_samples: 100
+  max_concurrent: 4
+
+mlflow:
+  base_experiment_name: "tabular_regression_hp_search"
+  tracking_uri: "http://localhost:5000"
+
+cv:
+  n_splits: 5
+  random_state: 42
+
+seed: 42

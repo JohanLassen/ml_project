@@ -1,0 +1,6 @@
+name: "basic"
+steps:
+  - imputer:
+      strategy: "median"
+  - scaler:
+      method: "standard"

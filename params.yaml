@@ -1,0 +1,6 @@
+experiments:
+  preprocessing_methods: [basic, feature_selection, scaling]
+  models: [xgboost, random_forest, linear]
+  search_algorithms: [bayesian, random]
+
+data_version: "1.0.0"
