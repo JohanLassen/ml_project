@@ -1,11 +1,16 @@
 name: "feature_selection"
+data:
+  feature_prefix: ""  # All numeric columns will be features (empty string matches all)
+  exclude_columns: ["name", "age", "outcome", "year", "yearmonth", "pseudo_id", "batch", "sex"]  # Columns to exclude from features
+  target_column: "age"  # Source column name in the dataset
+  target_name: "outcome"  # What to rename it to for processing
 steps:
-  - imputer:
-      strategy: "median"
-  - variance_selector:
-      threshold: 0.01
-  - k_best_selector:
-      k: 1000
-      score_func: "f_regression"
-  - scaler:
-      method: "robust"
+  imputer:
+    strategy: "median"
+  variance_selector:
+    threshold: 0.01
+  k_best_selector:
+    k: 1000
+    score_func: "f_regression"
+  scaler:
+    method: "robust"

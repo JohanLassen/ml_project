@@ -13,8 +13,17 @@ def main():
     # Load data
     df = pd.read_csv(args.input)
     
-    # Extract M features
-    m_features = [col for col in df.columns if col.startswith('M')]
+    # Dynamic column mapping - could be configured via args if needed
+    feature_prefix = 'M'
+    target_column = 'age'  # Source column name
+    target_name = 'outcome'  # Standardized name for processing
+    
+    # Rename target column for consistent processing
+    if target_column in df.columns and target_column != target_name:
+        df = df.rename(columns={target_column: target_name})
+    
+    # Extract features
+    feature_cols = [col for col in df.columns if col.startswith(feature_prefix)]
     
     # Save as parquet
     df.to_parquet('train_data.parquet')
@@ -23,15 +32,16 @@ def main():
     metadata = {
         'data_version': args.version,
         'n_samples': len(df),
-        'n_features': len(m_features),
-        'target_col': 'outcome',
+        'n_features': len(feature_cols),
+        'target_col': target_name,
+        'original_target_col': target_column,
         'source_file': args.input
     }
     
     with open('data_info.json', 'w') as f:
         json.dump(metadata, f, indent=2)
     
-    print(f"Prepared data v{args.version}: {len(df)} samples, {len(m_features)} features")
+    print(f"Prepared data v{args.version}: {len(df)} samples, {len(feature_cols)} features")
 
 if __name__ == "__main__":
     main()

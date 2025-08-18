@@ -1,7 +1,13 @@
+import os
 import ray
 from ray import tune
-from ray.tune.schedulers import BOHBScheduler
-from ray.tune.search.bohb import TuneBOHB
+try:
+    from ray.tune.schedulers import BOHBScheduler
+    from ray.tune.search.bohb import TuneBOHB
+except ImportError:
+    # Fallback for different Ray versions
+    from ray.tune.schedulers import HyperBandScheduler as BOHBScheduler
+    from ray.tune.search.hyperopt import HyperOptSearch as TuneBOHB
 import mlflow
 from models import ModelTrainer
 from typing import Dict
@@ -11,11 +17,16 @@ logger = logging.getLogger(__name__)
 
 class RayTuneTrainable(tune.Trainable):
     def setup(self, config: Dict):
+        # Set CUDA environment variables in worker process
+        import os
+        if 'CUDA_VISIBLE_DEVICES' not in os.environ:
+            os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+        
         self.tune_config = config
         self.hydra_config = config['hydra_config']
         self.X = config['X']
         self.y = config['y']
-        self.trainer = ModelTrainer(self.hydra_config['cv'])
+        self.trainer = ModelTrainer(self.hydra_config.cv)
     
     def step(self) -> Dict[str, float]:
         # Extract hyperparameters (remove non-param keys)
@@ -24,11 +35,23 @@ class RayTuneTrainable(tune.Trainable):
         
         # Evaluate model
         rmse = self.trainer.evaluate_model(
-            self.hydra_config['model'],
+            self.hydra_config.model,
             hyperparams,
             self.X,
             self.y
         )
+        
+        # Log to MLflow (create nested run for each trial)
+        try:
+            import mlflow
+            with mlflow.start_run(nested=True, run_name=f"trial_{self.trial_id}") as nested_run:
+                mlflow.log_params(hyperparams)
+                mlflow.log_metric("rmse", rmse)
+                mlflow.log_param("model_type", self.hydra_config.model['name'])
+                mlflow.log_param("preprocessing", self.hydra_config['name'])
+        except Exception as e:
+            # Don't fail the trial if MLflow logging fails
+            print(f"MLflow logging failed: {e}")
         
         return {"loss": rmse}
 
@@ -51,7 +74,12 @@ def create_search_space(model_config: Dict) -> Dict:
 def run_hyperparameter_search(config: Dict, X, y) -> tuple:
     """Run Ray Tune hyperparameter search"""
     
-    ray.init(ignore_reinit_error=True)
+    # Initialize Ray with GPU support if needed
+    ray_init_config = {"ignore_reinit_error": True}
+    if 'device' in config.get('model', {}).get('params', {}) and 'cuda' in str(config['model']['params']['device']):
+        ray_init_config['num_gpus'] = 1
+    
+    ray.init(**ray_init_config)
     
     try:
         # Create search space
@@ -67,6 +95,15 @@ def run_hyperparameter_search(config: Dict, X, y) -> tuple:
             search_alg = TuneBOHB()
         
         # Run search
+        # Check if this is an XGBoost GPU model
+        is_gpu_model = 'device' in config.get('model', {}).get('params', {}) and 'cuda' in str(config['model']['params']['device'])
+        
+        # Set resources based on model type
+        if is_gpu_model:
+            resources_per_trial = {"cpu": 1, "gpu": 0.25}  # Share GPU among trials
+        else:
+            resources_per_trial = {"cpu": 1}
+
         analysis = tune.run(
             RayTuneTrainable,
             config=search_space,
@@ -74,11 +111,11 @@ def run_hyperparameter_search(config: Dict, X, y) -> tuple:
             search_alg=search_alg,
             num_samples=config['ray']['num_samples'],
             max_concurrent_trials=config['ray']['max_concurrent'],
-            resources_per_trial={"cpu": 1},
+            resources_per_trial=resources_per_trial,
             metric="loss",
             mode="min",
-            name=f"{config['preprocessing']['name']}_{config['model']['name']}_{config['search']['name']}",
-            local_dir="./ray_results"
+            name=f"{config['name']}_{config['model']['name']}_{config['search']['name']}",
+            storage_path=os.path.abspath("./ray_results")
         )
         
         # Get best parameters

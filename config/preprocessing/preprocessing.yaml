@@ -1,0 +1,47 @@
+# Example preprocessing.yaml
+# Each entry in 'pipelines' is a named, feasible preprocessing path
+
+basic:
+  steps:
+    imputer:
+      module: sklearn.impute
+      class: SimpleImputer
+      params:
+        strategy: median
+    selector:
+      module: sklearn.feature_selection
+      class: VarianceThreshold
+      params:
+        threshold: 0.01
+    scaler:
+      module: sklearn.preprocessing
+      class: StandardScaler
+      params: {}
+minmax_pipeline:
+  steps:
+    imputer:
+      module: sklearn.impute
+      class: SimpleImputer
+      params:
+        strategy: mean
+    scaler:
+      module: sklearn.preprocessing
+      class: MinMaxScaler
+      params: {}
+kbest_standard:
+  steps:
+    imputer:
+      module: sklearn.impute
+      class: SimpleImputer
+      params:
+        strategy: mean
+    k_best_selector:
+      module: sklearn.feature_selection
+      class: SelectKBest
+      params:
+        score_func: f_regression
+        k: 20
+    scaler:
+      module: sklearn.preprocessing
+      class: StandardScaler
+      params: {}

@@ -1,6 +1,6 @@
 name: "basic"
 steps:
-  - imputer:
-      strategy: "median"
-  - scaler:
-      method: "standard"
+  imputer:
+    strategy: "median"
+  scaler:
+    method: "standard"

@@ -1,0 +1,9 @@
+steps:
+  imputer:
+    strategy: mean
+  variance_selector:
+    threshold: 0.0
+  k_best_selector:
+    k: 10
+  scaler:
+    method: standard

@@ -1,3 +1,5 @@
+name: "ml_project"
+
 defaults:
   - preprocessing: basic
   - model: xgboost
@@ -5,8 +7,10 @@ defaults:
 
 data:
   path: "data/raw/dataset.csv"
-  target_col: "outcome"
-  feature_prefix: "M"
+  feature_prefix: ""
+  exclude_columns: ["name", "age", "outcome", "year", "yearmonth", "pseudo_id", "batch", "sex"]  # Columns to exclude from features
+  target_column: "age"  # Source column name in the dataset
+  target_name: "outcome"  # What to rename it to for processing
 
 ray:
   num_samples: 100
@@ -21,3 +25,5 @@ cv:
   random_state: 42
 
 seed: 42
+
+

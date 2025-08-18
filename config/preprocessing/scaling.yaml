@@ -1,5 +1,9 @@
-# config/preprocessing/scaling.yaml
 name: "scaling_only"
+data:
+  feature_prefix: ""  # All numeric columns will be features (empty string matches all)
+  exclude_columns: ["name", "age", "outcome", "year", "yearmonth", "pseudo_id", "batch", "sex"]  # Columns to exclude from features
+  target_column: "age"  # Source column name in the dataset
+  target_name: "outcome"  # What to rename it to for processing
 steps:
-  - scaling:
-      method: "minmax"
+  scaler:
+    method: "minmax"
