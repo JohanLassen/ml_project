@@ -79,3 +79,8 @@ tmp/
 # Test artifacts
 trial_summary.txt
 test_results.txt
+
+# Test files
+test_*.py
+*_test.py
+*test*.py

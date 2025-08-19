@@ -1,27 +1,8 @@
 // main.nf - Simple and clean
 nextflow.enable.dsl=2
 
-// Parameters - load from params.yaml
-params.data_version = "1.0.0"
-params.preprocessing = ['basic', 'minmax_pipeline', 'kbest_standard']
-params.models = ['xgboost', 'random_forest', 'linear']
-params.search = ['bayesian', 'random']
-
-// Runtime configuration
-params.run_mode = 'hpc'  // 'local' or 'hpc'
-params.local_config = [
-    cpus: 2,
-    memory: '8.GB',
-    time: '30.m',
-    max_experiments: 2  // Limit for local testing
-]
-params.hpc_config = [
-    cpus_xgboost: 4,
-    cpus_other: 8,
-    memory: '32.GB',
-    time_xgboost: '2.h',
-    time_other: '4.h'
-]
+// Load parameters from params.yaml
+params.load("params.yaml")
 
 workflow {
     // Prepare data
@@ -61,7 +42,7 @@ process prepare_data {
     
     script:
     """
-    python ${projectDir}/scripts/prepare_data.py --input ${dataset} --version ${params.data_version}
+    python ${projectDir}/src/prepare_data.py --input ${dataset} --version ${params.data_version}
     """
 }
 

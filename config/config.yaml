@@ -6,7 +6,6 @@ defaults:
   - search: bayesian
 
 data:
-  path: "data/raw/dataset.csv"
   feature_prefix: ""
   exclude_columns: ["name", "age", "outcome", "year", "yearmonth", "pseudo_id", "batch", "sex"]  # Columns to exclude from features
   target_column: "age"  # Source column name in the dataset
