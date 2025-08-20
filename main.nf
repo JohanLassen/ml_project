@@ -1,8 +1,7 @@
 // main.nf - Simple and clean
 nextflow.enable.dsl=2
 
-// Load parameters from params.yaml
-params.load("params.yaml")
+// Parameters loaded from nextflow.config and command line
 
 workflow {
     // Prepare data
@@ -42,7 +41,7 @@ process prepare_data {
     
     script:
     """
-    python ${projectDir}/src/prepare_data.py --input ${dataset} --version ${params.data_version}
+    python ${projectDir}/src/prepare_data.py --input ${dataset} --version ${params.data_version} --config ${projectDir}/config/config.yaml
     """
 }
 
@@ -82,6 +81,7 @@ process run_experiment {
     path 'result_*.json'
     
     script:
+    def test_flag = (params.test_mode == true) ? '--test_mode' : ''
     """
     export PROJECT_DIR=${projectDir}
     python ${projectDir}/src/main.py \\
@@ -90,7 +90,8 @@ process run_experiment {
         --search ${search} \\
         --data ${data_file} \\
         --data_version ${params.data_version} \\
-        --cpus ${task.cpus}
+        --cpus ${task.cpus} \\
+        ${test_flag}
     """
 }
 

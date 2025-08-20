@@ -61,6 +61,27 @@ class DataProcessor:
         
         return X, y
     
+    def subset_data_for_testing(self, X: pd.DataFrame, y: pd.Series, max_features: int = 500, max_samples: int = 50) -> Tuple[pd.DataFrame, pd.Series]:
+        """Subset data for faster testing"""
+        # Sample features if we have too many
+        if X.shape[1] > max_features:
+            # Select features randomly but deterministically
+            np.random.seed(42)
+            selected_features = np.random.choice(X.columns, size=max_features, replace=False)
+            X = X[selected_features]
+            print(f"Subsetted features from {X.shape[1]} to {len(selected_features)}")
+        
+        # Sample rows if we have too many
+        if X.shape[0] > max_samples:
+            # Sample rows randomly but deterministically
+            np.random.seed(42)
+            selected_indices = np.random.choice(X.index, size=max_samples, replace=False)
+            X = X.loc[selected_indices].reset_index(drop=True)
+            y = y.loc[selected_indices].reset_index(drop=True)
+            print(f"Subsetted samples from {X.shape[0]} to {max_samples}")
+        
+        return X, y
+    
     def build_pipeline(self, preprocessing_config: Dict) -> Pipeline:
         """Build preprocessing pipeline from config"""
         steps = []

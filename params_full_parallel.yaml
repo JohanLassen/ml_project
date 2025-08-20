@@ -1,0 +1,24 @@
+data_version: "1.0.0"
+
+# Full parallel test configuration - all combinations
+data_version: "1.0.0"
+preprocessing: [basic, minmax_pipeline, kbest_standard]
+models: [xgboost, random_forest, linear]
+search: [bayesian, random]
+
+# Runtime configuration for full parallel execution
+run_mode: local
+local_config:
+  cpus: 2
+  memory: 4.GB
+  time: 10.m
+  max_experiments: 18  # All combinations: 3*3*2 = 18 experiments
+hpc_config:
+  cpus_xgboost: 4
+  cpus_other: 2
+  memory: 16.GB
+  time_xgboost: 1.h
+  time_other: 30.m
+
+# Testing mode for faster execution
+test_mode: true
