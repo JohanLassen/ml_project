@@ -1,0 +1,15 @@
+data_version: "1.0.0"
+
+# XGBoost test configuration
+data_version: "1.0.0"
+preprocessing: [basic]
+models: [xgboost]
+search: [random]
+
+# Runtime configuration
+run_mode: local
+local_config:
+  cpus: 1
+  memory: 8.GB
+  time: 15.m
+  max_experiments: 1  # Single XGBoost experiment

@@ -1,0 +1,15 @@
+data_version: "1.0.0"
+
+# Minimal test configuration
+data_version: "1.0.0"
+preprocessing: [basic]
+models: [linear]
+search: [random]
+
+# Runtime configuration
+run_mode: local
+local_config:
+  cpus: 1
+  memory: 8.GB
+  time: 10.m
+  max_experiments: 1  # Just one experiment for testing
