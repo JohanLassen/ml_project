@@ -1,0 +1,30 @@
+data_version: "1.0.0"
+
+# HPC-optimized test configuration
+data_version: "1.0.0"
+preprocessing: [basic]
+models: [linear, random_forest]  # Test both fast and slower models
+search: [random, bayesian]       # Test both search strategies
+
+# Hyperparameter optimization mode
+hyperparam_mode: "optuna"
+distributed_optuna: false       # Single job mode for initial testing
+optuna_max_trials: 15           # Reasonable for testing
+hyperparam_samples: 20
+
+# Runtime configuration - HPC settings
+run_mode: hpc  # This is key - ensures HPC resources are used
+local_config:
+  cpus: 2
+  memory: 8.GB
+  time: 30.m
+  max_experiments: 2
+hpc_config:
+  cpus_xgboost: 8      # More CPUs for XGBoost if you test it later
+  cpus_other: 4        # Good balance for other models
+  memory: 32.GB        # Sufficient memory for most tasks
+  time_xgboost: 2.h    # XGBoost can take longer
+  time_other: 1.h      # Reasonable time for linear/RF
+
+# Testing mode for faster execution
+test_mode: true

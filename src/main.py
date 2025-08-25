@@ -6,7 +6,7 @@ import mlflow
 from pathlib import Path
 from data_processing import DataProcessor
 from models import ModelTrainer
-from ray_trainer import run_hyperparameter_search
+from optuna_trainer import OptunaTrainer
 
 
 def setup_mlflow(data_version, experiment_name):
@@ -15,39 +15,24 @@ def setup_mlflow(data_version, experiment_name):
         print("MLflow run already active, ending previous run.")
         mlflow.end_run()
 
-    """Setup MLflow with file-based storage"""
-    # File-based MLflow tracking - stores in ./mlruns directory
-    mlflow_dir = os.environ.get('MLFLOW_TRACKING_URI', './mlruns')
-    mlflow.set_tracking_uri(f"file://{os.path.abspath(mlflow_dir)}")
-    
-    # Create mlruns directory if it doesn't exist
-    os.makedirs(mlflow_dir, exist_ok=True)
+    """Setup MLflow with PostgreSQL storage"""
+    # PostgreSQL MLflow tracking - use environment variable for flexibility
+    mlflow_uri = os.environ.get('MLFLOW_TRACKING_URI', 'postgresql://mlflow_user:mlflow_password@localhost:5432/mlflow_db')
+    mlflow.set_tracking_uri(mlflow_uri)
     mlflow.set_experiment(f"tabular_regression_v{data_version}")
     return mlflow.start_run(run_name=experiment_name)
 
-def setup_gpu_if_needed(model_name, cpus, test_mode=False):
-    """Configure GPU settings for XGBoost"""
+def setup_optimization(model_name, cpus, test_mode=False):
+    """Configure optimization settings"""
     # Reduce trials significantly in test mode
-    num_samples = 4 if test_mode else (1000 if model_name == 'xgboost' and 'CUDA_VISIBLE_DEVICES' in os.environ else 500)
-    max_concurrent = 2 if test_mode else (16 if model_name == 'xgboost' and 'CUDA_VISIBLE_DEVICES' in os.environ else 4)
+    n_trials = 4 if test_mode else (100 if model_name == 'xgboost' else 50)
     
-    if model_name == 'xgboost' and 'CUDA_VISIBLE_DEVICES' in os.environ:
-        return {
-            'ray': {
-                'num_cpus': cpus,
-                'num_gpus': 1,
-                'num_samples': num_samples,
-                'max_concurrent': max_concurrent
-            }
+    return {
+        'optuna': {
+            'n_trials': n_trials,
+            'storage_path': 'sqlite:///optuna_studies.db'
         }
-    else:
-        return {
-            'ray': {
-                'num_cpus': cpus,
-                'num_samples': num_samples,
-                'max_concurrent': max_concurrent
-            }
-        }
+    }
 
 def main():
     parser = argparse.ArgumentParser()
@@ -91,8 +76,8 @@ def main():
     config = OmegaConf.to_container(config, resolve=True) 
     config = OmegaConf.create(config)
     
-    # Add GPU settings
-    config.update(setup_gpu_if_needed(args.model, args.cpus, args.test_mode))
+    # Add optimization settings
+    config.update(setup_optimization(args.model, args.cpus, args.test_mode))
     config.data_version = args.data_version
 
         
@@ -106,7 +91,7 @@ def main():
                 "search_algorithm": args.search,
                 "data_version": args.data_version,
                 "cpus": args.cpus,
-                "gpu_enabled": args.model == 'xgboost' and 'CUDA_VISIBLE_DEVICES' in os.environ
+                "test_mode": args.test_mode
             })
             
             
@@ -137,7 +122,8 @@ def main():
             mlflow.log_param("n_features_after_preprocessing", X_processed.shape[1])
             
             # Run hyperparameter search
-            analysis, best_params = run_hyperparameter_search(config, X_processed, y)
+            optuna_trainer = OptunaTrainer(config['optuna']['storage_path'])
+            best_params, best_rmse = optuna_trainer.run_optimization(config, X_processed, y, config['optuna']['n_trials'])
             
             # Log best hyperparameters
             for param, value in best_params.items():
@@ -148,18 +134,14 @@ def main():
             final_model = trainer.train_final_model(config.model, best_params, X_processed, y)
             
             # Log results
-            best_rmse = analysis.get_best_trial('loss', 'min').last_result['loss']
             mlflow.log_metric("best_rmse", best_rmse)
             mlflow.log_metric("cv_rmse", best_rmse)  # Alias for easier searching
             
             # Log model
             mlflow.sklearn.log_model(final_model, "model")
             
-            # Log all trials as metrics for comparison
-            all_trials = analysis.trials
-            for i, trial in enumerate(all_trials):
-                if trial.last_result:
-                    mlflow.log_metric(f"trial_{i}_rmse", trial.last_result['loss'])
+            # Note: Individual trial logging could be added here if needed
+            # by accessing the Optuna study database
                     
             print(f"MLflow run completed: {run.info.run_id}")
         

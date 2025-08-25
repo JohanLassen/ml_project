@@ -1,0 +1,30 @@
+data_version: "1.0.0"
+
+# Parameters for Nextflow pipeline
+data_version: "1.0.0"
+preprocessing: [basic]  # Just one for testing
+models: [random_forest]  # Just one for testing
+search: [random]  # Just one for testing
+
+# Hyperparameter optimization mode
+hyperparam_mode: "optuna"
+distributed_optuna: true   # Enable distributed mode
+optuna_max_trials: 8       # Small number for testing
+hyperparam_samples: 20
+
+# Runtime configuration
+run_mode: hpc  # 'local' or 'hpc'
+local_config:
+  cpus: 2
+  memory: 8.GB
+  time: 30.m
+  max_experiments: 1
+hpc_config:
+  cpus_xgboost: 4
+  cpus_other: 4  # Reduced for testing
+  memory: 16.GB  # Reduced for testing
+  time_xgboost: 1.h
+  time_other: 30.m  # Shorter for testing
+
+# Testing mode for faster execution
+test_mode: true

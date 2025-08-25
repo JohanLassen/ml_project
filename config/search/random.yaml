@@ -1,3 +1,4 @@
 name: "random"
 algorithm: "random"
+n_trials: 50
 params: {}

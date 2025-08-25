@@ -13,19 +13,41 @@ workflow {
     models_ch = Channel.fromList(params.models) 
     search_ch = Channel.fromList(params.search)
     
+    // Create all combinations using combine operators
     experiments = preprocessing_ch
         .combine(models_ch)
         .combine(search_ch)
-        .map { prep, model, search -> [prep, model, search] }
+        .map { prep, model, search -> 
+            log.info "🔧 Creating experiment: ${prep} + ${model} + ${search}"
+            return [prep, model, search] 
+        }
     
-    // Limit experiments for local testing
-    if (params.run_mode == 'local') {
-        experiments = experiments.take(params.local_config.max_experiments)
-    }
+    // Print summary information
+    log.info "=== Experiment Configuration ==="
+    log.info "Preprocessing methods: ${params.preprocessing}"
+    log.info "Models: ${params.models}"
+    log.info "Search algorithms: ${params.search}"
+    log.info "Run mode: ${params.run_mode}"
+    log.info "Test mode: ${params.test_mode}"
+    log.info "Optuna max trials: ${params.optuna_max_trials}"
     
-    // Run all experiments
-    results = run_experiment(data_ready, experiments)
+    // Calculate total combinations
+    def total_combinations = params.preprocessing.size() * params.models.size() * params.search.size()
+    log.info "Total experiment combinations: ${total_combinations}"  
+    log.info "HPC mode: Running all ${total_combinations} experiments in parallel"
     
+    // Combine prepared data with each experiment combination
+    // Use combine but handle the list structure properly
+    experiment_inputs = data_ready
+        .combine(experiments)
+        .map { data_file, prep, model, search -> 
+            log.info "🔗 Pairing data with: ${prep} + ${model} + ${search}"
+            return [data_file, prep, model, search]
+        }
+    
+    // Run all experiments - each experiment gets its own SLURM job
+    results = run_experiment(experiment_inputs)
+
     // Collect results
     collect_results(results.collect())
 }
@@ -65,17 +87,21 @@ process run_experiment {
         }
     }
     queue { 
-        params.run_mode == 'local' ? null : (model == 'xgboost' ? 'gpu' : 'compute') 
+        params.run_mode == 'local' ? null : (model == 'xgboost' ? 'gpu' : null) 
     }
     clusterOptions { 
-        params.run_mode == 'local' ? null : (model == 'xgboost' ? '--gres=gpu:1' : '') 
+        if (params.run_mode == 'local') {
+            null
+        } else {
+            // Only request GPU for XGBoost if available
+            model == 'xgboost' ? '--gres=gpu:1' : null
+        }
     }
     
     publishDir "results/v${params.data_version}", mode: 'copy'
     
     input:
-    path data_file
-    tuple val(prep), val(model), val(search)
+    tuple path(data_file), val(prep), val(model), val(search)
     
     output:
     path 'result_*.json'
@@ -84,6 +110,10 @@ process run_experiment {
     def test_flag = (params.test_mode == true) ? '--test_mode' : ''
     """
     export PROJECT_DIR=${projectDir}
+    echo "🚀 Starting HPC experiment: ${prep} + ${model} + ${search}"
+    echo "Resources: ${task.cpus} CPUs, ${task.memory} memory"
+    echo "Queue: ${task.queue ?: 'default'}"
+    
     python ${projectDir}/src/main.py \\
         --preprocessing ${prep} \\
         --model ${model} \\

@@ -39,8 +39,8 @@ kbest_standard:
       module: sklearn.feature_selection
       class: SelectKBest
       params:
-        score_func: f_regression
         k: 20
+        # Note: score_func will be handled specially in the code
     scaler:
       module: sklearn.preprocessing
       class: StandardScaler

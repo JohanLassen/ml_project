@@ -1,17 +1,17 @@
-# 🚀 ML Workflow with Nextflow, Ray & MLflow
+# 🚀 ML Regression Pipeline with Nextflow, Optuna & MLflow
 
-A comprehensive machine learning pipeline built for high-performance experimentation with distributed hyperparameter optimization, GPU acceleration, and experiment tracking.
+A comprehensive machine learning pipeline built for high-performance regression experimentation with distributed hyperparameter optimization and experiment tracking.
 
 ![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![Nextflow](https://img.shields.io/badge/nextflow-22.0+-green.svg)
-![XGBoost](https://img.shields.io/badge/xgboost-GPU-orange.svg)
-![MLflow](https://img.shields.io/badge/mlflow-PostgreSQL-red.svg)
+![XGBoost](https://img.shields.io/badge/xgboost-regression-orange.svg)
+![MLflow](https://img.shields.io/badge/mlflow-file--based-red.svg)
 
 ## ✨ Features
 
-- 🔥 **GPU-Accelerated XGBoost** with CUDA support for faster training
-- ⚡ **Ray Tune** distributed hyperparameter optimization
-- 📊 **MLflow** experiment tracking with PostgreSQL backend
+- 🔥 **XGBoost Regression** with CPU/GPU support for faster training
+- ⚡ **Optuna** distributed hyperparameter optimization (SLURM-compatible)
+- 📊 **MLflow** experiment tracking with file-based backend
 - 🧬 **Nextflow** pipeline for reproducible workflows
 - 🔄 **Dynamic Resource Management** - seamlessly switch between local and HPC execution
 - 📈 **Early Stopping** for XGBoost models with validation splits
@@ -23,14 +23,14 @@ A comprehensive machine learning pipeline built for high-performance experimenta
 ```mermaid
 graph TD
     A[Nextflow Pipeline] --> B[Data Processing]
-    B --> C[Ray Tune Hyperparameter Search]
-    C --> D[XGBoost GPU Training]
-    C --> E[Linear Models]
-    C --> F[Other ML Models]
+    B --> C[Optuna Hyperparameter Search]
+    C --> D[XGBoost Regression]
+    C --> E[Linear Regression]
+    C --> F[Random Forest Regression]
     D --> G[MLflow Tracking]
     E --> G
     F --> G
-    G --> H[PostgreSQL Database]
+    G --> H[File-based MLruns]
     G --> I[Model Artifacts]
 ```
 

@@ -104,14 +104,26 @@ class DataProcessor:
                     scaler = StandardScaler()  # Default fallback
                 steps.append(('scaler', scaler))
         
-
+        self.pipeline = Pipeline(steps)
+        return self.pipeline
     
     def build_pipeline_from_yaml(self, steps_config):
         steps = []
         for step_name, step_info in steps_config.items():
             module = importlib.import_module(step_info['module'])
             cls = getattr(module, step_info['class'])
-            steps.append((step_name, cls(**step_info.get('params', {}))))
+            
+            # Special handling for SelectKBest to set score_func to f_regression
+            if step_info['class'] == 'SelectKBest':
+                # Convert OmegaConf to regular dict to avoid serialization issues
+                params = dict(step_info.get('params', {}))
+                params['score_func'] = f_regression  # Use the imported function
+                steps.append((step_name, cls(**params)))
+            else:
+                # Convert OmegaConf to regular dict for consistency
+                params = dict(step_info.get('params', {}))
+                steps.append((step_name, cls(**params)))
+                
         self.pipeline = Pipeline(steps)
         return self.pipeline
         

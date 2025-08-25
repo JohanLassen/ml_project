@@ -6,8 +6,14 @@ preprocessing: [basic, minmax_pipeline, kbest_standard]
 models: [xgboost, random_forest, linear]
 search: [bayesian, random]
 
+# Hyperparameter optimization mode
+hyperparam_mode: "optuna"  # 'optuna' or 'grid'
+distributed_optuna: true # true = multiple SLURM jobs, false = single job
+optuna_max_trials: 20      # Total trials across all jobs (when distributed=true) --> Used in intelligent search
+hyperparam_samples: 20     # Number of parameter combinations for grid search --> Used in grid search and random search
+
 # Runtime configuration
-run_mode: hpc  # 'local' or 'hpc'
+run_mode: local  # 'local' or 'hpc'
 local_config:
   cpus: 2
   memory: 8.GB
@@ -19,3 +25,6 @@ hpc_config:
   memory: 32.GB
   time_xgboost: 2.h
   time_other: 4.h
+
+# Testing mode for faster execution
+test_mode: false

@@ -1,5 +1,7 @@
 name: "bayesian"
-algorithm: "bohb"
+algorithm: "tpe"  # Tree-structured Parzen Estimator (Optuna's default)
+n_trials: 100
 params:
-  max_t: 100
-  reduction_factor: 2
+  # Additional Optuna-specific parameters can go here
+  n_startup_trials: 10  # Random trials before TPE kicks in
+  n_ei_candidates: 24   # Number of candidates for expected improvement
